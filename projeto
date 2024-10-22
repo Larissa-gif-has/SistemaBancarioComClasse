@@ -1,0 +1,150 @@
+class cliente:
+    def __init__(self, nome, cpf, data_nascimento):
+        self.nome = nome
+        self.cpf = cpf
+        self.data_nascimento = data_nascimento
+        self.agencia = '0001'
+        self.conta = ContaBancaria()
+
+
+class ContaBancaria:
+    contas_geradas = []
+
+    def __init__(self):
+        self.numero_conta = self.gerar_conta_bancaria()
+        self.saldo = 0
+        self.extrato = []
+        self.total_saques = 0
+        self.total_depositos = 0
+        self.numero_saques = 0
+        self.limite = 500
+        self.limite_saques = 3
+
+    def gerar_conta_bancaria(self):
+        import random
+        while True:
+            numero_conta = str(random.randint(100000, 999999))
+            if numero_conta not in contas_geradas:
+                contas_geradas.append(numero_conta)
+                cinco_digitos = numero_conta[:5]
+                digito_final = numero_conta[5]
+                return f'{cinco_digitos}-{digito_final}'
+
+    def depositar(self, valor):
+        if valor > 0:
+            self.saldo += valor
+            self.total_depositos += valor
+            self.extrato.append(f'Depósito:{valor:.2f}')
+            print(f'\033[0;34mDeposito no valor de R${valor:.2f} Efetuado com sucesso\033[m')
+        else:
+            print(' \033[0;31mValor invalido. Tente novamente\033[m')
+
+    def sacar(self, valor):
+        if valor > 0:
+            if self.numero_saques >= self.limite_saques:
+                print('\033[0;31mOperação falhou. Número máximo de saques excedido.\033[m')
+                return
+            if valor == 500:
+                self.numero_saques += 1
+            excedeu_saldo = valor > self.saldo
+            excedeu_limite = valor > self.limite
+            if excedeu_saldo:
+                print('\033[0;31mOperação falhou. Você não tem saldo suficiente.\033[m')
+            elif excedeu_limite:
+                print('\033[0;31mOperação falhou. O valor do saque excede o limite.\033[m')
+            elif valor > 0:
+                self.saldo -= valor
+                self.total_saques += valor
+                self.extrato.append(f'Depósito:{valor:.2f}')
+                print(f'\033[0;34mSaque no valor de R${valor:.2f} efetuado com sucesso.\033[m')
+        else:
+            print('\033[0;31mValor inválido. Tente novamente.\033[m')
+
+    def extrato_bancario(self):
+        from datetime import datetime
+        print('\033[0;34mEXTRATO DEPÓSITO BANCÁRIO\033[m ')
+        print(f'DEPÓSITO: R${self.total_depositos:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'))
+        print(f'VALOR TOTAL DE SAQUE: R${self.total_saques:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'))
+        print(f'SALDO ATUAL: R${self.saldo:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'))
+        hoje = datetime.now()
+        horario_formatado = hoje.strftime("%d/%m/%Y %H:%M:%S")
+        print(f'HORÁRIO: {horario_formatado}')
+
+
+    def cadastrar_usuario(self):
+        cpf = input('Informe seu CPF (xxx.xxx.xxx-xx):')
+        for usuario in usuarios:
+            if usuario['cpf'] == cpf:
+                cpf_existe = True
+                print('\033[0;31mCPF já cadastrado! Tente novamente\033[m')
+                return
+        nome = input('Irforme o nome completo:')
+        data_nascimento = input('Informe a data de nascimento (dd-mm-aaaa):')
+        novo_cliente = cliente(nome, cpf, data_nascimento)
+        usuarios.append(novo_cliente)
+        print(f'\033[0;35mUsuário: {nome} cadastrado com sucesso! Conta: '
+              f'{novo_cliente.conta.numero_conta}\033[m')
+
+
+    def filrar_usuario(self):
+        consultar = input('Informe o CPF (xxx.xxx.xxx-xx) para consulta:')
+        encontrado = 0
+        for consult in usuarios:
+            if consult.cpf == consultar:
+                encontrado = True
+                print(f'Nome: \033[0;35m{consult.nome}\033[m')
+                print(f'CPF: \033[0;35m{consult.cpf}\033[m')
+                print(f'Agencia: \033[0;35m{consult.agencia}\033[m')
+                print(f'Conta: \033[0;35m{consult.conta.numero_conta}\033[m')
+        if not encontrado:
+            print('\033[0;31mCPF não existe ou foi excluído\033[m')
+
+    def remover_usuario(self):
+        remover = input('Informe o CPF (xxx.xxx.xxx-xx)'
+                        'ou número da conta para cancelamento:')
+        encontrado = 0
+        for remove in usuarios:
+            if remove.cpf == remover or remove.conta == remover:
+                encontrado = True
+                usuarios.remove(remove)
+                print(f'Conta com o {remover} excluído com sucesso ')
+        if not encontrado:
+            print('\033[0;31mCPF não existe ou foi excluído\033[m')
+
+contas_geradas = []
+conta = ContaBancaria()
+usuarios = []
+
+while True:
+    menu = """\033[0;32m[ 1 ] - DEPOSITAR
+[ 2 ] - SACAR 
+[ 3 ] - EXTRATO 
+[ 4 ] - NOVO USÚARIO
+[ 5 ] - FILTRAR USÚARIO
+[ 6 ] - EXCLUIR CONTA
+[ 7 ] - SAIR\033[m
+>>> """
+    print('-' * 51)
+    opcao = int(input(menu))
+    print('-' * 51)
+    if opcao == 1:
+        valor = float(input('Informe o valor do depósito?'))
+        conta.depositar(valor)
+    elif opcao == 2:
+        valor = float(input('Informe o valor para o saque?'))
+        conta.sacar(valor)
+    elif opcao == 3:
+        conta.extrato_bancario()
+    elif opcao == 4:
+        conta.cadastrar_usuario()
+    elif opcao == 5:
+        conta.filrar_usuario()
+    elif opcao == 6:
+        conta.remover_usuario()
+    elif opcao == 7:
+        print('ENCERRANDO SESSÃO...')
+        break
+
+
+
+
